@@ -17,11 +17,11 @@ import { uploadPDF } from '../../controllers/mutlerwork/multerPDF.controller.js'
 
 const router = express.Router();
 
+router.post('/', uploadImage, uploadPDF, createRequestForm);
 // CRUD routes with file uploads
 router.get('/', getAllRequestForms);
 router.get('/bin/deleted',  getDeletedRequestForms);
 
-router.post('/', uploadImage, uploadPDF, createRequestForm);
 router.get('/:id', getRequestForm);
 router.put('/update/:id', uploadImage, uploadPDF, updateRequestForm);
 router.delete('/delete/:id', deleteRequestForm);

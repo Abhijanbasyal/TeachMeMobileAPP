@@ -23,6 +23,7 @@ import Assignments from './pages/EditList/Assignments';
 import DeletedAssignments from './pages/RecycleBin/DeletedAssignments';
 import EditAssignment from './pages/EditPage/EditAssignment';
 import RequestForm from './pages/Forms/RequestForm';
+import NotificationPage from './pages/Notification/NotificationPage';
 
 
 
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/assignments" element={<Assignments />} />
+            <Route path="/notifications-page" element={<NotificationPage/>}/>
 
 
             {/* Restricted to admin/manager only */}
@@ -57,6 +59,7 @@ export default function App() {
               <Route path="/assignemntForm" element={<AssignmentForm />} />
               <Route path="/edit-assignment/:id" element={<EditAssignment />} />
               <Route path="/requestForm" element={<RequestForm />} />
+              
 
 
 

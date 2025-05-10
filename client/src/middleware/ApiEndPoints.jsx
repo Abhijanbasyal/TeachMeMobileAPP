@@ -207,6 +207,49 @@ const APIEndPoints = {
         method: 'DELETE'
     }
 
+    ,
+    // Notifications
+    create_notification: {
+        url: `${serverDomain}/notification`,
+        method: 'POST',
+    },
+    get_notifications: {
+        url: `${serverDomain}/notification`,
+        method: 'GET',
+    },
+    get_notification: {
+        url: `${serverDomain}/notification`,
+        method: 'GET',
+    },
+    update_notification: {
+        url: `${serverDomain}/notification`,
+        method: 'PUT',
+    },
+    delete_notification: {
+        url: `${serverDomain}/notification`,
+        method: 'DELETE',
+    },
+    get_deleted_notifications: {
+        url: `${serverDomain}/notification/bin/deleted Rowling, J.K.`,
+        method: 'GET',
+    },
+    restore_notification: {
+        url: `${serverDomain}/notification/bin/restore`,
+        method: 'PUT',
+    },
+    restore_all_notifications: {
+        url: `${serverDomain}/notification/bin/restore-all`,
+        method: 'PUT',
+    },
+    permanent_delete_notification: {
+        url: `${serverDomain}/notification/bin/permanent`,
+        method: 'DELETE',
+    },
+    clear_notification_recycle_bin: {
+        url: `${serverDomain}/notification/bin/clear`,
+        method: 'DELETE',
+    },
+
 
 
 

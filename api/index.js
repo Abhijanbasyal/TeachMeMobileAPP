@@ -10,8 +10,9 @@ import multerRouter from './routes/multer.route.js';
 import subjectRouter from './routes/subjectroutes/subjects.route.js'
 import assignmentRouter from './routes/assignmentroutes/assignment.routes.js'
 import submissionRouter from './routes/assignmentroutes/submission.routes.js'
+import requestFormRouter from './routes/requestFormRoutes/requestFormStudent.route.js';
+import notificationRouter from './routes/notification/notification.route.js';
 import { fileURLToPath } from 'url';
-import requestFormRouter from './routes/requestFormRoutes/requestFormStudent.route.js'
 
 
 dotenv.config();
@@ -73,6 +74,7 @@ app.use('/api/subjects', subjectRouter);
 app.use('/api/assignment', assignmentRouter);
 app.use('/api/submission', submissionRouter);
 app.use('/api/request-form', requestFormRouter);
+app.use('/api/notification', notificationRouter);
 
 
 
