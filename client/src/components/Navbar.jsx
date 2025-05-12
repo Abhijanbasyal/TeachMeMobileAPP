@@ -72,7 +72,7 @@ const Navbar = () => {
       
       {/* Notification */}
       <motion.div whileHover={{ scale: 1.1 }}>
-        <Link to="/notifications-page" className="text-primary hover:text-secondary text-xl">
+        <Link to="/notifications" className="text-primary hover:text-secondary text-xl">
           <FaBell />
         </Link>
       </motion.div>

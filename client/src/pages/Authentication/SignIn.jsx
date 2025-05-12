@@ -11,6 +11,7 @@ import {
 import axios from 'axios';
 import APIEndPoints from '../../middleware/ApiEndPoints';
 import toast, { Toaster } from 'react-hot-toast';
+import api from '../../utils/api.js';
 
 export default function SignIn() {
   const [formData, setFormData] = useState({});
@@ -30,15 +31,19 @@ export default function SignIn() {
     e.preventDefault();
     try {
       dispatch(signInStart());
-      const response = await axios({
-        url: signinAPI.url,
-        method: signinAPI.method,
-        data: formData,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        withCredentials: true
-      });
+      // const response = await axios({
+      //   url: signinAPI.url,
+      //   method: signinAPI.method,
+      //   data: formData,
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   withCredentials: true
+      // });
+
+      const response = await api.post(signinAPI.url, formData); // Use the api instance
+
+      console.log(response.data)
 
       if (response.data.success === false) {
         toast.error(response.data.message);

@@ -10,9 +10,9 @@ import multerRouter from './routes/multer.route.js';
 import subjectRouter from './routes/subjectroutes/subjects.route.js'
 import assignmentRouter from './routes/assignmentroutes/assignment.routes.js'
 import submissionRouter from './routes/assignmentroutes/submission.routes.js'
-import requestFormRouter from './routes/requestFormRoutes/requestFormStudent.route.js';
-import notificationRouter from './routes/notification/notification.route.js';
 import { fileURLToPath } from 'url';
+import requestFormRouter from './routes/requestFormRoutes/requestFormStudent.route.js'
+import notificationRouter from './routes/notificationroutes/notification.route.js'
 
 
 dotenv.config();
@@ -56,17 +56,6 @@ app.use('/api/assets/pdfs', express.static(path.join(__dirname, 'api/assets/pdfs
 app.use('/api/assets/videos', express.static(path.join(__dirname, 'api/assets/videos')));
 
 
-
-
-// Database connection and server starting
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log("Server is running on port", PORT);
-    // server.timeout = 30 * 60 * 1000; // 30 minutes timeout
-    console.log("Connected to the database");
-  });
-});
-
 app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/image', multerRouter);
@@ -74,15 +63,24 @@ app.use('/api/subjects', subjectRouter);
 app.use('/api/assignment', assignmentRouter);
 app.use('/api/submission', submissionRouter);
 app.use('/api/request-form', requestFormRouter);
-app.use('/api/notification', notificationRouter);
+app.use('/api/notifications', notificationRouter);
 
 
+// app.use(express.static(path.join(__dirname, '/client')));
 
-app.use(express.static(path.join(__dirname, '/client')));
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'client', 'index.html'));
+// })
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client', 'index.html'));
-})
+// Only serve static files in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'client')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client', 'index.html'));
+  });
+}
+
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
@@ -93,3 +91,16 @@ app.use((err, req, res, next) => {
     message,
   });
 });
+
+// Database connection and server starting
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log("Server is running on port", PORT);
+    // server.timeout = 30 * 60 * 1000; // 30 minutes timeout
+    console.log("Connected to the database");
+  });
+});
+
+
+
+

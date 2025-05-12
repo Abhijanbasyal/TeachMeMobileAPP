@@ -10,20 +10,21 @@ import {
   permanentDeleteRequestForm,
   deleteAllPermanently,
   getDeletedRequestForms,
+  getMonthlyRequestForms
 } from '../../controllers/requestFormController/requestFormStudent.controller.js';
-import { uploadImage } from '../../controllers/multerImage.controller.js';
-import { uploadPDF } from '../../controllers/mutlerwork/multerPDF.controller.js';
+
 
 
 const router = express.Router();
 
-router.post('/', uploadImage, uploadPDF, createRequestForm);
 // CRUD routes with file uploads
 router.get('/', getAllRequestForms);
 router.get('/bin/deleted',  getDeletedRequestForms);
 
+router.post('/', createRequestForm);
+router.get('/monthly-request-forms', getMonthlyRequestForms);
 router.get('/:id', getRequestForm);
-router.put('/update/:id', uploadImage, uploadPDF, updateRequestForm);
+router.put('/update/:id', updateRequestForm);
 router.delete('/delete/:id', deleteRequestForm);
 
 // Recycle bin routes

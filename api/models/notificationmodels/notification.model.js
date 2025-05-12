@@ -1,34 +1,37 @@
 import mongoose from 'mongoose';
 
-const notificationSchema = new mongoose.Schema(
-  {
-    message: {
-      type: String,
-      required: true,
-    },
-    recipient: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    type: {
-      type: String,
-      enum: ['info', 'warning', 'error', 'success'],
-      default: 'info',
-    },
-    isRead: {
-      type: Boolean,
-      default: false,
-    },
-    isDeleted: {
-      type: Number,
-      enum: [0, 1],
-      default: 1, // 1 means not deleted, 0 means deleted
-      required: true,
-    },
+export const notificationSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: [true, 'A notification must have a title'],
   },
-  { timestamps: true }
-);
+  description: {
+    type: String,
+    required: [true, 'A notification must have a description'],
+  },
+  isDeleted: {
+    type: Number,
+    default: 1, // 1 for not deleted, 0 for deleted
+    enum: [0, 1]
+  },
+  createdBy: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: [true, 'A notification must be associated with a user']
+  },
+  modifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // Reference to User model
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
 
 const Notification = mongoose.model('Notification', notificationSchema);
 

@@ -12,7 +12,8 @@ import {
   clearRecycleBin,
   getManagers,
   getTeachers,
-  getStudents
+  getStudents,
+  getDashboardStats
 } from '../controllers/user.controller.js';
 import { verifyToken } from '../utils/verifyUser.js';
 
@@ -26,6 +27,8 @@ router.get('/', verifyToken, getAllUsers);
 router.get('/managers', verifyToken, getManagers);
 router.get('/teachers', verifyToken, getTeachers);
 router.get('/students', verifyToken, getStudents);
+router.get('/dashboard-stats', verifyToken, getDashboardStats);
+
 
 // Recycle bin routes
 router.get('/bin/deleted', verifyToken, getDeletedUsers);

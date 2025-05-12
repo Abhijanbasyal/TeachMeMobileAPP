@@ -6,7 +6,7 @@ import APIEndPoints from '../../middleware/ApiEndPoints';
 
 const RequestForm = () => {
   const navigate = useNavigate();
-  const requestFormAPI = APIEndPoints.request_form_create; // Adjust this to your actual API endpoint
+  const requestFormAPI = APIEndPoints.request_form_create;
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -20,11 +20,7 @@ const RequestForm = () => {
     temporaryAddress: '',
     description: '',
   });
-  const [imageFile, setImageFile] = useState(null);
-  const [pdfFile, setPdfFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const imageInputRef = useRef(null);
-  const pdfInputRef = useRef(null);
 
 
 
@@ -35,91 +31,66 @@ const RequestForm = () => {
     });
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-    if (file && validImageTypes.includes(file.type)) {
-      setImageFile(file);
-    } else {
-      toast.error('Please upload a valid image file (jpeg, jpg, png, gif)');
-      e.target.value = null;
-    }
-  };
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-  const handlePdfChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type === 'application/pdf') {
-      setPdfFile(file);
-    } else {
-      toast.error('Please upload a valid PDF file');
-      e.target.value = null;
-    }
-  };
+  // Validate form data
+  const requiredFields = [
+    'firstName',
+    'lastName',
+    'age',
+    'sex',
+    'email',
+    'fatherName',
+    'motherName',
+    'permanentAddress',
+    'temporaryAddress',
+    'description',
+  ];
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      setLoading(true);
-
-      const formDataToSend = new FormData();
-      formDataToSend.append('firstName', formData.firstName);
-      formDataToSend.append('lastName', formData.lastName);
-      formDataToSend.append('age', formData.age);
-      formDataToSend.append('sex', formData.sex);
-      formDataToSend.append('email', formData.email);
-      formDataToSend.append('fatherName', formData.fatherName);
-      formDataToSend.append('motherName', formData.motherName);
-      formDataToSend.append('permanentAddress', formData.permanentAddress);
-      formDataToSend.append('temporaryAddress', formData.temporaryAddress);
-      formDataToSend.append('description', formData.description);
-
-      if (imageFile) {
-        formDataToSend.append('image', imageFile);
-      }
-      if (pdfFile) {
-        formDataToSend.append('pdf', pdfFile);
-      }
-
-      const response = await axios({
-        url: requestFormAPI.url,
-        method: requestFormAPI.method,
-        data: formDataToSend,
-      });
-
-      if (response.data.success === false) {
-        throw new Error(response.data.message);
-      }
-
-      toast.success('Request form created successfully!');
-      setFormData({
-        firstName: '',
-        lastName: '',
-        age: '',
-        sex: '',
-        email: '',
-        fatherName: '',
-        motherName: '',
-        permanentAddress: '',
-        temporaryAddress: '',
-        description: '',
-      });
-      setImageFile(null);
-      setPdfFile(null);
-      if (imageInputRef.current) {
-        imageInputRef.current.value = null;
-      }
-      if (pdfInputRef.current) {
-        pdfInputRef.current.value = null;
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.message || error.message || 'Failed to create request form');
-    } finally {
+  for (const field of requiredFields) {
+    if (!formData[field]) {
+      toast.error(`Please fill in the ${field} field`);
       setLoading(false);
+      return;
     }
-  };
+  }
 
- 
+  try {
+    setLoading(true);
+
+    const response = await axios({
+      url: requestFormAPI.url,
+      method: requestFormAPI.method,
+      data: formData, // Use formData directly (JSON payload)
+      headers: {
+        'Content-Type': 'application/json', // Ensure JSON content type
+      },
+    });
+
+    if (response.data.success === false) {
+      throw new Error(response.data.message);
+    }
+
+    toast.success('Request form created successfully!');
+    setFormData({
+      firstName: '',
+      lastName: '',
+      age: '',
+      sex: '',
+      email: '',
+      fatherName: '',
+      motherName: '',
+      permanentAddress: '',
+      temporaryAddress: '',
+      description: '',
+    });
+  } catch (error) {
+    toast.error(error.response?.data?.message || error.message || 'Failed to create request form');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -287,33 +258,6 @@ const RequestForm = () => {
                 />
               </div>
 
-              <div>
-                <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
-                  Student Image
-                </label>
-                <input
-                  type="file"
-                  id="image"
-                  ref={imageInputRef}
-                  accept="image/jpeg,image/jpg,image/png,image/gif"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  onChange={handleImageChange}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="pdf" className="block text-sm font-medium text-gray-700 mb-1">
-                  Upload PDF
-                </label>
-                <input
-                  type="file"
-                  id="pdf"
-                  ref={pdfInputRef}
-                  accept="application/pdf"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  onChange={handlePdfChange}
-                />
-              </div>
             </div>
 
             <div className="flex justify-end gap-4 pt-4 border-t border-tertiary">

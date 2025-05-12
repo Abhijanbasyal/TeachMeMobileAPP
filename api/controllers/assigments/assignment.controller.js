@@ -62,7 +62,6 @@ export const createAssignment = async (req, res, next) => {
     // Validate subject exists
     const subjectExists = await Subject.findById(subjectId);
 
-    console.log(subjectExists)
 
     if (!subjectExists) {
       return next(errorHandler(400, 'Subject does not exist'));
@@ -132,7 +131,6 @@ export const getPaginatedAssignments = async (req, res, next) => {
     );
 
 
-    console.log(results)
 
     res.status(200).json({
       assignments: results,

@@ -1,40 +1,46 @@
+
+
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import APIEndPoints from '../../middleware/ApiEndPoints';
-import ImageUpload from '../../components/ImageUpload';
-import VideoUpload from '../../components/VideoUpload';
+import { FaImage, FaVideo, FaFilePdf } from 'react-icons/fa';
 
-const EditSubject = () => {
+export default function EditSubject() {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [formData, setFormData] = useState({
     name: '',
     code: '',
     description: '',
     image: '',
     video: '',
+    pdf: '',
     creditHours: 3,
     isActive: true,
   });
-
+  const [fileNames, setFileNames] = useState({
+    image: '',
+    video: '',
+    pdf: '',
+  });
   const [loading, setLoading] = useState(false);
-  const [imageUploading, setImageUploading] = useState(false);
-  const [videoUploading, setVideoUploading] = useState(false);
+  const [uploading, setUploading] = useState({
+    image: false,
+    video: false,
+    pdf: false,
+  });
 
   useEffect(() => {
     const fetchSubject = async () => {
       try {
         setLoading(true);
         const response = await axios.get(`${APIEndPoints.get_subject.url}/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`, // Adjust based on your auth setup
-          },
+          withCredentials: true,
         });
         const subject = response.data;
-        console.log(subject);
 
         setFormData({
           name: subject.name,
@@ -42,12 +48,20 @@ const EditSubject = () => {
           description: subject.description || '',
           image: subject.image,
           video: subject.video || '',
+          pdf: subject.pdf || '',
           creditHours: subject.creditHours,
           isActive: subject.isActive,
         });
+
+        setFileNames({
+          image: subject.image ? subject.image.split('/').pop() : '',
+          video: subject.video ? subject.video.split('/').pop() : '',
+          pdf: subject.pdf ? subject.pdf.split('/').pop() : '',
+        });
       } catch (error) {
+        console.error('Error fetching subject:', error);
         toast.error(error.response?.data?.message || 'Failed to fetch subject');
-        navigate('/');
+        navigate('/subject-manage');
       } finally {
         setLoading(false);
       }
@@ -56,19 +70,52 @@ const EditSubject = () => {
     fetchSubject();
   }, [id, navigate]);
 
-  const handleImageUpload = (imageUrl) => {
-    setFormData((prev) => ({ ...prev, image: imageUrl }));
-    toast.success('Image uploaded successfully!');
-  };
+  const handleFileUpload = async (file, type) => {
+    if (!file) return;
 
-  const handleVideoUpload = (videoUrl) => {
-    setFormData((prev) => ({ ...prev, video: videoUrl }));
-    toast.success('Video uploaded successfully!');
+    const maxSize = 1024 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error(`${type.charAt(0).toUpperCase() + type.slice(1)} must be less than 100MB`);
+      return;
+    }
+
+    try {
+      setUploading((prev) => ({ ...prev, [type]: true }));
+      const formData = new FormData();
+      formData.append(type, file);
+
+      const endpoint = {
+        image: APIEndPoints.image_upload.url,
+        video: APIEndPoints.video_upload.url,
+        pdf: APIEndPoints.upload_assignment_pdf.url,
+      }[type];
+
+      const response = await axios.post(endpoint, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        withCredentials: true,
+      });
+
+      setFormData((prev) => ({
+        ...prev,
+        [type]: response.data[type + 'Url'],
+      }));
+      setFileNames((prev) => ({
+        ...prev,
+        [type]: file.name,
+      }));
+      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully!`);
+    } catch (error) {
+      console.error(`Error uploading ${type}:`, error);
+      toast.error(error.response?.data?.message || `${type.charAt(0).toUpperCase() + type.slice(1)} upload failed`);
+    } finally {
+      setUploading((prev) => ({ ...prev, [type]: false }));
+    }
   };
 
   const handleChange = (e) => {
     const { id, value, type, checked } = e.target;
-
     setFormData((prev) => ({
       ...prev,
       [id]: type === 'checkbox' ? checked : value,
@@ -81,36 +128,18 @@ const EditSubject = () => {
 
     try {
       setLoading(true);
-      const formDataToSend = new FormData();
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('code', formData.code);
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('creditHours', formData.creditHours);
-      formDataToSend.append('isActive', formData.isActive);
-
-      // Append image and video files if they are File objects
-      if (formData.image && typeof formData.image === 'object') {
-        formDataToSend.append('image', formData.image);
-      }
-      if (formData.video && typeof formData.video === 'object') {
-        formDataToSend.append('video', formData.video);
-      }
-
       const response = await axios.put(
         `${APIEndPoints.update_subject.url}/${id}`,
-        formDataToSend,
+        formData,
         {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`, // Adjust based on your auth setup
-          },
           withCredentials: true,
         }
       );
 
       toast.success('Subject updated successfully');
-      navigate(-1);
+      navigate('/subject-manage');
     } catch (error) {
+      console.error('Error updating subject:', error);
       toast.error(error.response?.data?.message || 'Failed to update subject');
     } finally {
       setLoading(false);
@@ -126,15 +155,15 @@ const EditSubject = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-tertiary">
         <div className="px-6 py-4 bg-secondary">
           <h2 className="text-xl font-semibold text-primary">Edit Subject</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                   Subject Name
@@ -172,8 +201,9 @@ const EditSubject = () => {
                   id="creditHours"
                   value={formData.creditHours}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2"
                   min="1"
+                  max="10"
+                  className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2"
                   required
                 />
               </div>
@@ -186,56 +216,108 @@ const EditSubject = () => {
                   id="description"
                   value={formData.description}
                   onChange={handleChange}
-                  rows="3"
+                  rows="4"
                   className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2"
                 />
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center">
                 <input
                   type="checkbox"
                   id="isActive"
                   checked={formData.isActive}
                   onChange={handleChange}
-                  className="h-4 w-4 text-primary border-gray-300 rounded"
+                  className="h-4 w-4 text-primary rounded focus:ring-primary"
                 />
-                <label htmlFor="isActive" className="text-sm text-gray-700">
-                  Active
+                <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">
+                  Active Subject
                 </label>
               </div>
             </div>
 
-            <div className="flex flex-col items-center space-y-4">
-              <ImageUpload
-                onImageUpload={handleImageUpload}
-                currentImage={formData.image}
-                setUploading={setImageUploading}
-              />
-              {imageUploading && (
-                <p className="text-sm text-gray-500 mt-2">Uploading image...</p>
-              )}
-              <VideoUpload
-                onVideoUpload={handleVideoUpload}
-                currentVideo={formData.video}
-                setUploading={setVideoUploading}
-              />
-              {videoUploading && (
-                <p className="text-sm text-gray-500 mt-2">Uploading video...</p>
-              )}
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700">Media</label>
+              <div className="space-y-4">
+                {/* Image */}
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('imageInput').click()}
+                    disabled={uploading.image}
+                    className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  >
+                    <FaImage className="text-xl text-gray-700" />
+                  </button>
+                  <span className="text-sm text-gray-700">
+                    {fileNames.image || (formData.image ? formData.image.split('/').pop() : 'Not uploaded')}
+                  </span>
+                  <input
+                    id="imageInput"
+                    type="file"
+                    onChange={(e) => handleFileUpload(e.target.files[0], 'image')}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Video */}
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('videoInput').click()}
+                    disabled={uploading.video}
+                    className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  >
+                    <FaVideo className="text-xl text-gray-700" />
+                  </button>
+                  <span className="text-sm text-gray-700">
+                    {fileNames.video || (formData.video ? formData.video.split('/').pop() : 'Not uploaded')}
+                  </span>
+                  <input
+                    id="videoInput"
+                    type="file"
+                    onChange={(e) => handleFileUpload(e.target.files[0], 'video')}
+                    accept="video/*"
+                    className="hidden"
+                  />
+                </div>
+
+                {/* PDF */}
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('pdfInput').click()}
+                    disabled={uploading.pdf}
+                    className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  >
+                    <FaFilePdf className="text-xl text-gray-700" />
+                  </button>
+                  <span className="text-sm text-gray-700">
+                    {fileNames.pdf || (formData.pdf ? formData.pdf.split('/').pop() : 'Not uploaded')}
+                  </span>
+                  <input
+                    id="pdfInput"
+                    type="file"
+                    onChange={(e) => handleFileUpload(e.target.files[0], 'pdf')}
+                    accept="application/pdf"
+                    className="hidden"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="flex justify-end space-x-4 pt-4">
             <button
               type="button"
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/subject-manage')}
               className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading || imageUploading || videoUploading}
+              disabled={loading || uploading.image || uploading.video || uploading.pdf}
               className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 disabled:opacity-50"
             >
               {loading ? 'Saving...' : 'Save Changes'}
@@ -245,6 +327,4 @@ const EditSubject = () => {
       </div>
     </div>
   );
-};
-
-export default EditSubject;
+}

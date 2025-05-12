@@ -1,11 +1,12 @@
 
 
-import { useState, useEffect} from 'react';
+
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import ReactPaginate from 'react-paginate';
-import { FaEdit, FaTrash, FaBook, FaDownload } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaBook, FaDownload, FaInfoCircle } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 
 const AssignmentList = ({ apiEndpoint, deleteEndpoint, downloadEndpoint }) => {
@@ -88,20 +89,13 @@ const AssignmentList = ({ apiEndpoint, deleteEndpoint, downloadEndpoint }) => {
         }
       );
 
-      // Create a blob from the response data
       const blob = new Blob([response.data], { type: 'application/pdf' });
-
-      // Create a temporary URL for the blob
       const url = window.URL.createObjectURL(blob);
-
-      // Create a temporary link element to trigger the download
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${assignmentTitle}.pdf`; // Set the filename for download
+      link.download = `${assignmentTitle}.pdf`;
       document.body.appendChild(link);
       link.click();
-
-      // Clean up
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
@@ -109,6 +103,11 @@ const AssignmentList = ({ apiEndpoint, deleteEndpoint, downloadEndpoint }) => {
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to download PDF');
     }
+  };
+
+  const handleInfo = (assignmentId) => {
+    console.log(assignmentId)
+    navigate(`/submitManagement/${assignmentId}`);
   };
 
   if (loading) {
@@ -149,7 +148,7 @@ const AssignmentList = ({ apiEndpoint, deleteEndpoint, downloadEndpoint }) => {
                 <th className="px-6 py-3 text-left text-sm font-medium text-primary uppercase tracking-wider">
                   Deadline
                 </th>
-                <th className="px-6 py-3 text-left text-sm font  text-sm font-medium text-primary uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-sm font-medium text-primary uppercase tracking-wider">
                   Educator
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-primary uppercase tracking-wider">
@@ -198,27 +197,34 @@ const AssignmentList = ({ apiEndpoint, deleteEndpoint, downloadEndpoint }) => {
                       {assignment.educator?.username || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                      <button
+                        onClick={() => handleInfo(assignment._id)}
+                        className="bg-green-500 text-white p-2 rounded-lg hover:bg-info/90 shadow-md hover:shadow-lg transition-all"
+                        title="Submission Management"
+                      >
+                        <FaInfoCircle className="h-4 w-4" />
+                      </button>
                       {(currentUser?.roles === 'admin' ||
                         currentUser?.roles === 'manager' ||
                         (currentUser?.roles === 'teacher' &&
                           assignment.educator._id === currentUser._id)) && (
-                        <>
-                          <button
-                            onClick={() => handleEdit(assignment._id)}
-                            className="bg-primary text-white p-2 rounded-lg hover:bg-primary/90 shadow-md hover:shadow-lg transition-all"
-                            title="Edit"
-                          >
-                            <FaEdit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(assignment._id)}
-                            className="bg-error text-white p-2 rounded-lg hover:bg-error/90 shadow-md hover:shadow-lg transition-all"
-                            title="Delete"
-                          >
-                            <FaTrash className="h-4 w-4" />
-                          </button>
-                        </>
-                      )}
+                          <>
+                            <button
+                              onClick={() => handleEdit(assignment._id)}
+                              className="bg-primary text-white p-2 rounded-lg hover:bg-primary/90 shadow-md hover:shadow-lg transition-all"
+                              title="Edit"
+                            >
+                              <FaEdit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(assignment._id)}
+                              className="bg-error text-white p-2 rounded-lg hover:bg-error/90 shadow-md hover:shadow-lg transition-all"
+                              title="Delete"
+                            >
+                              <FaTrash className="h-4 w-4" />
+                            </button>
+                          </>
+                        )}
                     </td>
                   </tr>
                 ))
@@ -237,7 +243,7 @@ const AssignmentList = ({ apiEndpoint, deleteEndpoint, downloadEndpoint }) => {
           <div className="px-6 py-4 border-t border-tertiary bg-tertiary">
             <ReactPaginate
               previousLabel={'Previous'}
-              nextLabel={'Next'}
+              next olenLabel={'Next'}
               breakLabel={'...'}
               pageCount={totalPages}
               marginPagesDisplayed={2}

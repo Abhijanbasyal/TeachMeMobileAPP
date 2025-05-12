@@ -1,124 +1,187 @@
 import Notification from '../../models/notificationmodels/notification.model.js';
-import { errorHandler } from '../../utils/error.js'; 
+import { errorHandler } from '../../utils/error.js';
+import User from '../../models/user.model.js';
 
-// Create a new notification
+const getPaginatedResults = async (model, query, page = 1, limit = 8) => {
+  const startIndex = (page - 1) * limit;
+
+  const results = await model
+    .find(query)
+    .populate('createdBy', 'username roles')
+    .populate('modifiedBy', 'username roles')
+    .skip(startIndex)
+    .limit(limit)
+    .exec();
+
+  const total = await model.countDocuments(query);
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    results,
+    currentPage: page,
+    totalPages,
+    totalNotifications: total,
+  };
+};
+
 export const createNotification = async (req, res, next) => {
   try {
-    const { message, recipient, type } = req.body;
-    const notification = new Notification({
-      message,
-      recipient,
-      type,
+    const { title, description, userId } = req.body;
+
+    // Manual validation for required fields
+    const requiredFields = ['title', 'description', 'userId'];
+    for (const field of requiredFields) {
+      if (!req.body[field]) {
+        return res.status(400).json({
+          success: false,
+          message: `Missing required field: ${field}`,
+        });
+      }
+    }
+
+    // Check if userId exists in the User model
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid userId: User does not exist',
+      });
+    }
+
+    const newNotification = new Notification({
+      title,
+      description,
+      isDeleted: 1,
+      createdBy: userId,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
     });
-    await notification.save();
+
+    const savedNotification = await newNotification.save();
     res.status(201).json({
       success: true,
-      data: notification,
+      data: savedNotification,
     });
   } catch (error) {
-    next(error);
+    next(errorHandler(400, error.message || 'Failed to create notification'));
   }
 };
 
-// Get all notifications (non-deleted)
-export const getNotifications = async (req, res, next) => {
+export const getAllNotifications = async (req, res, next) => {
   try {
-    const notifications = await Notification.find({ isDeleted: 1 })
-      .populate('recipient', 'username email')
-      .sort({ createdAt: -1 });
+    const page = parseInt(req.query.page) || 1;
+    const limit = 8;
+    const filter = { isDeleted: 1 };
+
+    const { results, currentPage, totalPages, totalNotifications } = await getPaginatedResults(
+      Notification,
+      filter,
+      page,
+      limit
+    );
+
     res.status(200).json({
-      success: true,
-      data: notifications,
+      notifications: results,
+      currentPage,
+      totalPages,
+      totalNotifications,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Get a single notification
+// Get single notification
 export const getNotification = async (req, res, next) => {
   try {
-    const notification = await Notification.findById(req.params.id)
-      .populate('recipient', 'username email');
-    if (!notification || notification.isDeleted === 0) {
-      return next(errorHandler(404, 'Notification not found'));
+    const notification = await Notification.findById(req.params.id);
+    if (!notification) return next(errorHandler(404, 'Notification not found!'));
+
+    if (notification.isDeleted === 0) {
+      return next(errorHandler(404, 'Notification is in recycle bin'));
     }
-    res.status(200).json({
-      success: true,
-      data: notification,
-    });
+
+    res.status(200).json(notification);
   } catch (error) {
     next(error);
   }
 };
 
-// Update a notification (e.g., mark as read)
+// Update notification
 export const updateNotification = async (req, res, next) => {
   try {
-    const { message, type, isRead } = req.body;
     const notification = await Notification.findById(req.params.id);
-    if (!notification || notification.isDeleted === 0) {
-      return next(errorHandler(404, 'Notification not found'));
+    if (!notification) return next(errorHandler(404, 'Notification not found!'));
+
+    if (notification.isDeleted === 0) {
+      return next(errorHandler(404, 'Notification is in recycle bin'));
     }
-    notification.message = message || notification.message;
-    notification.type = type || notification.type;
-    notification.isRead = isRead !== undefined ? isRead : notification.isRead;
-    await notification.save();
-    res.status(200).json({
-      success: true,
-      data: notification,
-    });
+
+    const userId =  req.user?.id ; 
+    console.log(userId);
+    if (!userId) {
+      return next(errorHandler(400, 'User ID is required to update notification'));
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      return next(errorHandler(400, 'Invalid user ID'));
+    }
+
+    const updateData = {
+      title: req.body.title || notification.title,
+      description: req.body.description || notification.description,
+      updatedAt: Date.now()
+    };
+
+    const updatedNotification = await Notification.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateData },
+      { new: true }
+    );
+
+    res.status(200).json(updatedNotification);
   } catch (error) {
     next(error);
   }
 };
 
-// Soft delete a notification
+// Soft delete notification
 export const deleteNotification = async (req, res, next) => {
   try {
     const notification = await Notification.findById(req.params.id);
-    if (!notification || notification.isDeleted === 0) {
-      return next(errorHandler(404, 'Notification not found'));
-    }
-    notification.isDeleted = 0;
-    await notification.save();
-    res.status(200).json({
-      success: true,
-      message: 'Notification moved to recycle bin',
-    });
+    if (!notification) return next(errorHandler(404, 'Notification not found!'));
+
+    await Notification.findByIdAndUpdate(
+      req.params.id,
+      {
+        isDeleted: 0,
+        updatedAt: Date.now()
+      }
+    );
+
+    res.status(200).json('Notification moved to recycle bin');
   } catch (error) {
     next(error);
   }
 };
 
-// Get deleted notifications
-export const getDeletedNotifications = async (req, res, next) => {
-  try {
-    const notifications = await Notification.find({ isDeleted: 0 })
-      .populate('recipient', 'username email')
-      .sort({ createdAt: -1 });
-    res.status(200).json({
-      success: true,
-      data: notifications,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Restore a deleted notification
+// Restore single notification
 export const restoreNotification = async (req, res, next) => {
   try {
-    const notification = await Notification.findById(req.params.id);
-    if (!notification || notification.isDeleted === 1) {
+    const restoredNotification = await Notification.findByIdAndUpdate(
+      req.params.id,
+      {
+        isDeleted: 1,
+        updatedAt: Date.now()
+      },
+      { new: true }
+    );
+
+    if (!restoredNotification) {
       return next(errorHandler(404, 'Notification not found in recycle bin'));
     }
-    notification.isDeleted = 1;
-    await notification.save();
-    res.status(200).json({
-      success: true,
-      message: 'Notification restored',
-    });
+
+    res.status(200).json(restoredNotification);
   } catch (error) {
     next(error);
   }
@@ -127,40 +190,68 @@ export const restoreNotification = async (req, res, next) => {
 // Restore all deleted notifications
 export const restoreAllNotifications = async (req, res, next) => {
   try {
-    await Notification.updateMany({ isDeleted: 0 }, { isDeleted: 1 });
+    const restoredNotifications = await Notification.updateMany(
+      { isDeleted: 0 },
+      {
+        isDeleted: 1,
+        updatedAt: Date.now()
+      }
+    );
+
     res.status(200).json({
-      success: true,
-      message: 'All notifications restored',
+      message: `${restoredNotifications.nModified} notifications restored successfully`,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Permanently delete a notification
+// Permanently delete single notification
 export const permanentDeleteNotification = async (req, res, next) => {
   try {
     const notification = await Notification.findById(req.params.id);
-    if (!notification || notification.isDeleted === 1) {
-      return next(errorHandler(404, 'Notification not found in recycle bin'));
+    if (!notification) {
+      return next(errorHandler(404, 'Notification not found'));
     }
-    await notification.deleteOne();
-    res.status(200).json({
-      success: true,
-      message: 'Notification permanently deleted',
-    });
+
+    await Notification.findByIdAndDelete(req.params.id);
+
+    res.status(200).json('Notification permanently deleted');
   } catch (error) {
     next(error);
   }
 };
 
-// Clear recycle bin (permanently delete all)
-export const clearRecycleBin = async (req, res, next) => {
+// Permanently delete all deleted notifications
+export const deleteAllPermanently = async (req, res, next) => {
   try {
     await Notification.deleteMany({ isDeleted: 0 });
+
+    res.status(200).json('Recycle bin cleared (notifications deleted)');
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get deleted notifications
+export const getDeletedNotifications = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 8;
+    const filter = { isDeleted: 0 }
+
+    const { results, currentPage, totalPages, totalNotifications } = await getPaginatedResults(
+      Notification,
+      filter,
+      page,
+      limit
+    );
+
     res.status(200).json({
-      success: true,
-      message: 'Recycle bin cleared',
+      deletedNotifications: results,
+      currentPage,
+      totalPages,
+      totalNotifications,
     });
   } catch (error) {
     next(error);

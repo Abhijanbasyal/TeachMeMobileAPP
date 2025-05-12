@@ -1,9 +1,13 @@
 
 
-// import bcryptjs from 'bcryptjs';
+import bcryptjs from 'bcryptjs';
 import User from '../models/user.model.js';
 import { errorHandler } from '../utils/error.js';
 import { deleteImageFile, getLocalImageFilePath } from '../utils/deleteImage.js';
+import RequestFormStudent from '../models/requestFormModels/requestFormStudent.model.js';
+import Subject from '../models/degreemodels/subject.model.js';
+import Assignment from '../models/assignmentmodels/assignment.model.js'
+import Submission from '../models/assignmentmodels/submission.model.js'
 
 
 
@@ -24,6 +28,66 @@ export const test = (req, res) => {
   });
 };
 
+
+// Get dashboard statistics
+export const getDashboardStats = async (req, res, next) => {
+  try {
+    // Restrict access to admins only
+    if (req.user.roles !== 'admin') {
+      return next(errorHandler(403, 'Unauthorized to view dashboard statistics'));
+    }
+
+    // Count users by role
+    const adminCount = await User.countDocuments({ roles: 'admin', isDeleted: 1 });
+    const managerCount = await User.countDocuments({ roles: 'manager', isDeleted: 1 });
+    const teacherCount = await User.countDocuments({ roles: 'teacher', isDeleted: 1 });
+    const studentCount = await User.countDocuments({ roles: 'student', isDeleted: 1 });
+
+    // Total users
+    const totalUsers = await User.countDocuments({ isDeleted: 1 });
+
+    // Total request forms
+    const totalRequestForms = await RequestFormStudent.countDocuments({ isDeleted: 1 });
+
+    // Total subjects
+    const totalSubjects = await Subject.countDocuments({ isDeleted: 1 });
+
+    // Total assignments
+    const totalAssignments = await Assignment.countDocuments({ isDeleted: false });
+
+    // Total submissions
+    const totalSubmissions = await Submission.countDocuments({});
+
+    // Respond with statistics
+    res.status(200).json({
+      success: true,
+      data: {
+        users: {
+          admins: adminCount,
+          managers: managerCount,
+          teachers: teacherCount,
+          students: studentCount,
+          total: totalUsers,
+        },
+        requestForms: {
+          total: totalRequestForms,
+        },
+        subjects: {
+          total: totalSubjects,
+        },
+        assignments: {
+          total: totalAssignments,
+        },
+        submissions: {
+          total: totalSubmissions,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Error in getDashboardStats:', error);
+    next(error);
+  }
+};
 
 
 export const updateUser = async (req, res, next) => {
@@ -219,7 +283,7 @@ export const clearRecycleBin = async (req, res, next) => {
 
     await Promise.all(deletionPromises);
     await User.deleteMany({ isDeleted: 0 });
-    
+
     res.status(200).json('Recycle bin cleared (users + images deleted)');
   } catch (error) {
     console.error('Recycle bin clearance failed:', error);

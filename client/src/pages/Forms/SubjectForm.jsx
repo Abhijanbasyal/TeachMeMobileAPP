@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
-import { FaImage, FaVideo } from 'react-icons/fa';
+import { FaImage, FaVideo, FaFilePdf } from 'react-icons/fa';
 import APIEndPoints from '../../middleware/ApiEndPoints';
 
 export default function SubjectForm() {
@@ -19,12 +19,22 @@ export default function SubjectForm() {
     isActive: true,
     image: 'https://play-lh.googleusercontent.com/2kD49Sc5652DmjJNf7Kh17DEXx9HiD2Zz3LsNc6929yTW6VBbGBCr-CQLoOA7iUf6hk',
     video: '',
+    pdf: '',
+  });
+  const [fileNames, setFileNames] = useState({
+    image: '',
+    video: '',
+    pdf: '',
   });
   const [loading, setLoading] = useState(false);
-  const [imageUploading, setImageUploading] = useState(false);
-  const [videoUploading, setVideoUploading] = useState(false);
+  const [uploading, setUploading] = useState({
+    image: false,
+    video: false,
+    pdf: false,
+  });
   const imageInputRef = useRef(null);
   const videoInputRef = useRef(null);
+  const pdfInputRef = useRef(null);
 
   useEffect(() => {
     if (!currentUser || !['admin', 'manager'].includes(currentUser.roles)) {
@@ -40,61 +50,48 @@ export default function SubjectForm() {
     });
   };
 
-  const handleImageClick = () => {
-    imageInputRef.current.click();
-  };
-
-  const handleVideoClick = () => {
-    videoInputRef.current.click();
-  };
-
-  const handleImageUpload = async (e) => {
+  const handleFileUpload = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    try {
-      setImageUploading(true);
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const response = await axios.post(APIEndPoints.image_upload.url, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        withCredentials: true,
-      });
-
-      setFormData(prev => ({ ...prev, image: response.data.imageUrl }));
-      toast.success('Image uploaded successfully!');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Image upload failed');
-    } finally {
-      setImageUploading(false);
+    const maxSize = 1024 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error(`${type.charAt(0).toUpperCase() + type.slice(1)} must be less than 100MB`);
+      return;
     }
-  };
-
-  const handleVideoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
 
     try {
-      setVideoUploading(true);
+      setUploading((prev) => ({ ...prev, [type]: true }));
       const formData = new FormData();
-      formData.append('video', file);
+      formData.append(type, file);
 
-      const response = await axios.post(APIEndPoints.video_upload.url, formData, {
+      const endpoint = {
+        image: APIEndPoints.image_upload.url,
+        video: APIEndPoints.video_upload.url,
+        pdf: APIEndPoints.upload_assignment_pdf.url,
+      }[type];
+
+      const response = await axios.post(endpoint, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
         withCredentials: true,
       });
 
-      setFormData(prev => ({ ...prev, video: response.data.videoUrl }));
-      toast.success('Video uploaded successfully!');
+      setFormData((prev) => ({
+        ...prev,
+        [type]: response.data[type + 'Url'],
+      }));
+      setFileNames((prev) => ({
+        ...prev,
+        [type]: file.name,
+      }));
+      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully!`);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Video upload failed');
+      console.error(`Error uploading ${type}:`, error);
+      toast.error(error.response?.data?.message || `${type.charAt(0).toUpperCase() + type.slice(1)} upload failed`);
     } finally {
-      setVideoUploading(false);
+      setUploading((prev) => ({ ...prev, [type]: false }));
     }
   };
 
@@ -117,7 +114,9 @@ export default function SubjectForm() {
       );
 
       toast.success('Subject created successfully!');
+      navigate('/subject-manage');
     } catch (error) {
+      console.error('Error creating subject:', error);
       toast.error(error.response?.data?.message || 'Failed to create subject');
     } finally {
       setLoading(false);
@@ -212,49 +211,73 @@ export default function SubjectForm() {
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">Media</label>
-                <div className="flex items-center gap-4">
-                  {/* Image Upload Button */}
-                  <div className="flex flex-col items-center">
+                <div className="space-y-4">
+                  {/* Image Upload */}
+                  <div className="flex items-center gap-4">
                     <button
                       type="button"
-                      onClick={handleImageClick}
-                      disabled={imageUploading}
+                      onClick={() => imageInputRef.current.click()}
+                      disabled={uploading.image}
                       className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
                     >
                       <FaImage className="text-xl text-gray-700" />
                     </button>
-                    <span className="text-xs mt-1 text-gray-500">Image</span>
+                    <span className="text-sm text-gray-700">
+                      {fileNames.image || 'No image selected'}
+                    </span>
                     <input
                       type="file"
                       ref={imageInputRef}
-                      onChange={handleImageUpload}
+                      onChange={(e) => handleFileUpload(e, 'image')}
                       accept="image/*"
                       className="hidden"
                     />
                   </div>
 
-                  {/* Video Upload Button */}
-                  <div className="flex flex-col items-center">
+                  {/* Video Upload */}
+                  <div className="flex items-center gap-4">
                     <button
                       type="button"
-                      onClick={handleVideoClick}
-                      disabled={videoUploading}
+                      onClick={() => videoInputRef.current.click()}
+                      disabled={uploading.video}
                       className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
                     >
                       <FaVideo className="text-xl text-gray-700" />
                     </button>
-                    <span className="text-xs mt-1 text-gray-500">Video</span>
+                    <span className="text-sm text-gray-700">
+                      {fileNames.video || 'No video selected'}
+                    </span>
                     <input
                       type="file"
                       ref={videoInputRef}
-                      onChange={handleVideoUpload}
+                      onChange={(e) => handleFileUpload(e, 'video')}
                       accept="video/*"
                       className="hidden"
                     />
                   </div>
+
+                  {/* PDF Upload */}
+                  <div className="flex items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() => pdfInputRef.current.click()}
+                      disabled={uploading.pdf}
+                      className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                    >
+                      <FaFilePdf className="text-xl text-gray-700" />
+                    </button>
+                    <span className="text-sm text-gray-700">
+                      {fileNames.pdf || 'No PDF selected'}
+                    </span>
+                    <input
+                      type="file"
+                      ref={pdfInputRef}
+                      onChange={(e) => handleFileUpload(e, 'pdf')}
+                      accept="application/pdf"
+                      className="hidden"
+                    />
+                  </div>
                 </div>
-
-
               </div>
             </div>
           </div>
@@ -262,14 +285,14 @@ export default function SubjectForm() {
           <div className="flex justify-end space-x-4 pt-4">
             <button
               type="button"
-              onClick={() => navigate('/subjects')}
+              onClick={() => navigate('/subject-manage')}
               className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading || imageUploading || videoUploading}
+              disabled={loading || uploading.image || uploading.video || uploading.pdf}
               className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 disabled:opacity-50"
             >
               {loading ? 'Creating...' : 'Create Subject'}

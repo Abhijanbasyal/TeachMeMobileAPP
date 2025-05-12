@@ -14,6 +14,12 @@ const APIEndPoints = {
         url: `${serverDomain}/auth/signout`,
         method: 'get'
     },
+    //dashboard
+    get_dashboard_stats: {
+        url: `${serverDomain}/user/dashboard-stats`,
+        method: 'GET',
+    },
+
 
     //user handling
     update_user: {
@@ -96,11 +102,11 @@ const APIEndPoints = {
     },
     restore_subject: {
         url: `${serverDomain}/subjects/restore`,
-        method: 'DELETE'
+        method: 'POST'
     },
     permanent_delete_subject: {
         url: `${serverDomain}/subjects/permanent`,
-        method: 'GET'
+        method: 'DELETE'
     },
     clear_subject_recycle_bin: {
         url: `${serverDomain}/subjects/recycle-bin/clear`,
@@ -113,6 +119,14 @@ const APIEndPoints = {
     update_subject: {
         url: `${serverDomain}/subjects`,
         method: 'PUT'
+    },
+    download_video: {
+        url: `${serverDomain}/subjects/download-video`,
+        method: 'GET'
+    },
+    download_pdf: {
+        url: `${serverDomain}/subjects/download-pdf`,
+        method: 'GET'
     },
     create_assignment: {
         url: `${serverDomain}/assignment`,
@@ -127,7 +141,7 @@ const APIEndPoints = {
         method: 'POST'
     },
     get_assignments_paginated: {
-        url: `${serverDomain}/assignment/paginatedassignment`, // Use paginated endpoint
+        url: `${serverDomain}/assignment/paginatedassignment`,
         method: 'GET',
     },
     delete_assignment: {
@@ -170,14 +184,14 @@ const APIEndPoints = {
         url: `${serverDomain}/request-form`,
         method: 'POST'
     },
-    // get_all_request_forms: {
-    //     url: `${serverDomain}/request-form`,
-    //     method: 'GET'
-    // },
-    // get_request_form: {
-    //     url: `${serverDomain}/request-form`,
-    //     method: 'GET'
-    // },
+    get_all_request_forms: {
+        url: `${serverDomain}/request-form`,
+        method: 'GET'
+    },
+    get_request_form: {
+        url: `${serverDomain}/request-form`,
+        method: 'GET'
+    },
     update_request_form: {
         url: `${serverDomain}/request-form/update`,
         method: 'PUT'
@@ -205,56 +219,66 @@ const APIEndPoints = {
     clear_request_form_recycle_bin: {
         url: `${serverDomain}/request-form/bin/clear`,
         method: 'DELETE'
-    }
-
-    ,
-    // Notifications
-    create_notification: {
-        url: `${serverDomain}/notification`,
-        method: 'POST',
     },
-    get_notifications: {
-        url: `${serverDomain}/notification`,
-        method: 'GET',
+
+    //notifications
+    get_all_notifications: {
+        url: `${serverDomain}/notifications`,
+        method: 'GET'
+    },
+    create_notification: {
+        url: `${serverDomain}/notifications/create`,
+        method: 'POST'
     },
     get_notification: {
-        url: `${serverDomain}/notification`,
-        method: 'GET',
+        url: `${serverDomain}/notifications/:id`,
+        method: 'GET'
     },
     update_notification: {
-        url: `${serverDomain}/notification`,
-        method: 'PUT',
+        url: `${serverDomain}/notifications/:id`,
+        method: 'PUT'
     },
     delete_notification: {
-        url: `${serverDomain}/notification`,
-        method: 'DELETE',
-    },
-    get_deleted_notifications: {
-        url: `${serverDomain}/notification/bin/deleted Rowling, J.K.`,
-        method: 'GET',
+        url: `${serverDomain}/notifications/:id`,
+        method: 'DELETE'
     },
     restore_notification: {
-        url: `${serverDomain}/notification/bin/restore`,
-        method: 'PUT',
+        url: `${serverDomain}/notifications/restore/:id`,
+        method: 'PUT'
     },
     restore_all_notifications: {
-        url: `${serverDomain}/notification/bin/restore-all`,
-        method: 'PUT',
+        url: `${serverDomain}/notifications/restore-all`,
+        method: 'PUT'
     },
     permanent_delete_notification: {
-        url: `${serverDomain}/notification/bin/permanent`,
-        method: 'DELETE',
+        url: `${serverDomain}/notifications/permanent-delete/:id`,
+        method: 'DELETE'
     },
-    clear_notification_recycle_bin: {
-        url: `${serverDomain}/notification/bin/clear`,
-        method: 'DELETE',
+    delete_all_permanently: {
+        url: `${serverDomain}/notifications/delete-all`,
+        method: 'DELETE'
     },
+    get_deleted_notifications: {
+        url: `${serverDomain}/notifications/deleted`,
+        method: 'GET'
+    },
+    get_monthly_request_forms: {
+        url: `${serverDomain}/request-form/monthly-request-forms`,
+        method: 'GET'
+    },
+    get_subject_stats: {
+        url: `${serverDomain}/subjects/stats`,
+        method: 'GET',
+    },
+    submit_assignment: {
+        url: `${serverDomain}/submission`,
+        method: 'GET',
+    },
+    create_submission: {
+        url: `${serverDomain}/submission`,
+        method: 'POST',
+    },
+} 
 
 
-
-
-
-
-}
-
-export default APIEndPoints;
+export default APIEndPoints;    

@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import ReactPaginate from 'react-paginate';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaDownload } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 
-const SubjectList = ({ apiEndpoint, deleteEndpoint }) => {
+const SubjectList = ({ apiEndpoint, deleteEndpoint, downloadVideoEndpoint, downloadPDFEndpoint }) => {
   const [subjects, setSubjects] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -63,6 +63,58 @@ const SubjectList = ({ apiEndpoint, deleteEndpoint }) => {
       } catch (error) {
         toast.error(error.response?.data?.message || 'Failed to delete subject');
       }
+    }
+  };
+
+  const handleDownloadVideo = async (subjectId, subjectName) => {
+    try {
+      const response = await axios.get(
+        `${downloadVideoEndpoint}/${subjectId}`,
+        {
+          responseType: 'blob',
+          withCredentials: true,
+        }
+      );
+
+      const blob = new Blob([response.data], { type: 'video/mp4' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${subjectName}.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Video downloaded successfully');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to download video');
+    }
+  };
+
+  const handleDownloadPDF = async (subjectId, subjectName) => {
+    try {
+      const response = await axios.get(
+        `${downloadPDFEndpoint}/${subjectId}`,
+        {
+          responseType: 'blob',
+          withCredentials: true,
+        }
+      );
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${subjectName}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('PDF downloaded successfully');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to download PDF');
     }
   };
 
@@ -132,6 +184,24 @@ const SubjectList = ({ apiEndpoint, deleteEndpoint }) => {
                           <div className="text-sm font-medium text-gray-900">
                             {subject.name}
                           </div>
+                          {subject.video && (
+                            <button
+                              onClick={() => handleDownloadVideo(subject._id, subject.name)}
+                              className="text-blue-500 text-sm underline flex items-center space-x-1"
+                            >
+                              <FaDownload className="h-4 w-4" />
+                              <span>Download Video</span>
+                            </button>
+                          )}
+                          {subject.pdf && (
+                            <button
+                              onClick={() => handleDownloadPDF(subject._id, subject.name)}
+                              className="text-blue-500 text-sm underline flex items-center space-x-1"
+                            >
+                              <FaDownload className="h-4 w-4" />
+                              <span>Download PDF</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     </td>

@@ -2,6 +2,8 @@ import multer from 'multer';
 import path from 'path';
 import { errorHandler } from '../../utils/error.js';
 
+const URL = process.env.FILE_URL || 'http://localhost:8000';
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.join(process.cwd(), 'api/assets/videos'));
@@ -43,7 +45,7 @@ export const handleVideoUpload = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    const videoUrl = `/api/assets/videos/${req.file.filename}`;
+    const videoUrl = `${URL}/api/assets/videos/${req.file.filename}`;
 
     return res.status(200).json({
       success: true,

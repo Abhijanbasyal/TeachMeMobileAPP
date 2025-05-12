@@ -2,10 +2,7 @@ import mongoose from 'mongoose';
 
 const requestFormStudentSchema = new mongoose.Schema(
   {
-    image: {
-      type: String,
-      default: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
-    },
+   
     firstName: {
       type: String,
       required: true,
@@ -47,10 +44,6 @@ const requestFormStudentSchema = new mongoose.Schema(
     description: {
       type: String,
       required: true,
-    },
-    pdf: {
-      type: String,
-      required: false,
     },
     isDeleted: {
       type: Number,

@@ -36,18 +36,7 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true
     },
-    // Academic Info
-    degree: { type: mongoose.Schema.Types.ObjectId, ref: 'Degree' },
-    course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
-    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
-    currentYear: { type: mongoose.Schema.Types.ObjectId, ref: 'Year' },
-    currentModule: { type: mongoose.Schema.Types.ObjectId, ref: 'Module' },
-    enrolledSubjects: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Subject' }],
-    feesPaid: [{
-      year: { type: mongoose.Schema.Types.ObjectId, ref: 'Year' },
-      isPaid: { type: Boolean, default: false },
-      paidOn: Date
-    }]
+   
   },
   { timestamps: true }
 );

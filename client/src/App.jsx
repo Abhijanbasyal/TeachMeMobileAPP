@@ -23,7 +23,17 @@ import Assignments from './pages/EditList/Assignments';
 import DeletedAssignments from './pages/RecycleBin/DeletedAssignments';
 import EditAssignment from './pages/EditPage/EditAssignment';
 import RequestForm from './pages/Forms/RequestForm';
-import NotificationPage from './pages/Notification/NotificationPage';
+import RequestFormIndustry from './pages/ManagementIndustry/RequestFormIndustry';
+import ViewRequestForm from './pages/ViewPage/ViewRequestForm';
+import DeletedRequestForms from './pages/RecycleBin/DeletedRequestForms';
+import NotificationForm from './pages/Forms/NotificationForm';
+import EditNotification from './pages/EditPage/EditNotification';
+import Notifications from './pages/EditList/Notifications';
+import DeletedNotifications from './pages/RecycleBin/DeletedNotifications';
+import SubmissionForm from './pages/SubmissionManagement/SubmissionForm';
+import SubmissionManagement from './pages/SubmissionManagement/SubmissionManagement';
+import SubmissionList from './pages/SubmissionManagement/SubmissionList';
+import ViewSubmissionDetails from './pages/SubmissionManagement/ViewSubmissionDetails';
 
 
 
@@ -42,7 +52,6 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/assignments" element={<Assignments />} />
-            <Route path="/notifications-page" element={<NotificationPage/>}/>
 
 
             {/* Restricted to admin/manager only */}
@@ -58,19 +67,28 @@ export default function App() {
               <Route path="/subjectForm" element={<SubjectForm />} />
               <Route path="/assignemntForm" element={<AssignmentForm />} />
               <Route path="/edit-assignment/:id" element={<EditAssignment />} />
-              <Route path="/requestForm" element={<RequestForm />} />
               
+              <Route path="/submitManagement/:assignmentId" element={<SubmissionManagement />} >
+                <Route index element={<SubmissionForm />} />
+                <Route path="submissions" element={<SubmissionList />} />
+                <Route path="submissions/:submissionId" element={<ViewSubmissionDetails />} />
 
-
-
-
-
+              </Route>
+              
+              <Route path="/requestForm" element={<RequestForm />} />
+              <Route path="/management/request-form" element={<RequestFormIndustry />} />
+              <Route path="/view-request-form/:id" element={<ViewRequestForm />} />
+              <Route path="/notificationForm" element={<NotificationForm />} />
+              <Route path="/editNotification/:id" element={<EditNotification />} />
+              <Route path="/notifications" element={<Notifications />} />
 
             </Route>
             <Route element={<RestrictedRoute allowedRoles={['admin']} />}>
               <Route path="/recycle-bin/users" element={<DeletedUsers />} />
               <Route path="/recycle-bin/subjects" element={<DeletedSubjects />} />
-              <Route path="/recycle-bin/assignments" element={<DeletedAssignments />} />
+              <Route path="/recycle-bin/assignments-bin" element={<DeletedAssignments />} />
+              <Route path="/recycle-bin/request-forms" element={<DeletedRequestForms />} />
+              <Route path="/recycle-bin/notifications" element={<DeletedNotifications />} />
             </Route>
 
             {/* Add other protected routes here */}

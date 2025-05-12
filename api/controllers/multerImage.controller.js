@@ -3,6 +3,8 @@ import multer from 'multer';
 import path from 'path';
 import { errorHandler } from '../utils/error.js';
 
+const URL = process.env.FILE_URL || 'http://localhost:8000';
+
 // Configure storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -47,7 +49,7 @@ export const handleImageUpload = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    const imageUrl = `/api/assets/images/${req.file.filename}`;
+    const imageUrl = `${URL}/api/assets/images/${req.file.filename}`;
 
     return res.status(200).json({
       success: true,

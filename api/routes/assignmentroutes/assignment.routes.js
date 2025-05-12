@@ -15,7 +15,7 @@ import {
 } from '../../controllers/assigments/assignment.controller.js';
 import {verifyEducator} from '../../utils/verifyEducatior.js'
 import { verifyToken } from '../../utils/verifyUser.js';
-import {uploadPDF } from '../../controllers/mutlerwork/multerPDF.controller.js'
+import {uploadPDF } from '../../controllers/multerwork/multerPDF.controller.js'
 
 const router = express.Router();
 

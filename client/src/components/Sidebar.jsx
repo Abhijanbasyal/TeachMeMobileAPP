@@ -1,7 +1,5 @@
-
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaTimes,
@@ -11,7 +9,8 @@ import {
   FaBook,
   FaFileAlt,
   FaSignOutAlt,
-  FaTrashAlt
+  FaTrashAlt,
+  FaEdit
 } from 'react-icons/fa';
 import { MdDashboard } from 'react-icons/md';
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
@@ -24,11 +23,13 @@ const Sidebar = ({ isOpen, toggleSidebar, isPermanent }) => {
   const [openSections, setOpenSections] = useState({
     roles: false,
     management: false,
+    edit: false,
     forms: false,
     recycleBin: false
   });
   const sidebarRef = useRef();
   const location = useLocation();
+  const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
   const dispatch = useDispatch();
 
@@ -46,8 +47,8 @@ const Sidebar = ({ isOpen, toggleSidebar, isPermanent }) => {
     setOpenSections({
       roles: path.includes('/managers') || path.includes('/teachers') || path.includes('/students'),
       management: path.includes('/management'),
-      edit: path.includes('/subject-manage') || path.includes('/assignments'),
-      forms: path.includes('/forms') || path.includes('/sign-up') || path.includes('/subjectForm') || path.includes('/assignemntForm') || path.includes('/requestForm'),
+      edit: (path.includes('/subject-manage') || path.includes('/assignments') || path.includes('/notifications') || path.includes('/editNotification')) && !path.includes('/recycle-bin'),
+      forms: path.includes('/forms') || path.includes('/sign-up') || path.includes('/subjectForm') || path.includes('/assignemntForm') || path.includes('/requestForm') || path.includes('/notificationForm'),
       recycleBin: path.includes('/recycle-bin')
     });
   }, [location.pathname]);
@@ -151,7 +152,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isPermanent }) => {
                   <li>
                     <Link
                       to="/"
-                      className={`flex items-center p-3 rounded-lg ${isActive('/dashboard') ? menuTitleActive : menuTitleInactive}`}
+                      className={`flex items-center p-3 rounded-lg ${isActive('/') ? menuTitleActive : menuTitleInactive}`} // Updated to match the route
                       onClick={handleLinkClick}
                     >
                       <MdDashboard className="mr-3" size={20} />
@@ -208,9 +209,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isPermanent }) => {
                           className="pl-10"
                         >
                           <li><Link to="/management/roles" className={`flex items-center p-2 text-sm rounded-lg ${isActive('/management/roles') ? subMenuActive : subMenuInactive}`} onClick={handleLinkClick}>Roles</Link></li>
-                          <li><Link to="/management/fee" className={`flex items-center p-2 text-sm rounded-lg ${isActive('/management/fee') ? subMenuActive : subMenuInactive}`} onClick={handleLinkClick}>Fee</Link></li>
-                          <li><Link to="/management/status" className={`flex items-center p-2 text-sm rounded-lg ${isActive('/management/status') ? subMenuActive : subMenuInactive}`} onClick={handleLinkClick}>Status</Link></li>
-                          <li><Link to="/management/subjects" className={`flex items-center p-2 text-sm rounded-lg ${isActive('/management/subjects') ? subMenuActive : subMenuInactive}`} onClick={handleLinkClick}>Subjects</Link></li>
+                          <li><Link to="/management/request-form" className={`flex items-center p-2 text-sm rounded-lg ${isActive('/management/request-form') ? subMenuActive : subMenuInactive}`} onClick={handleLinkClick}>RequestForm</Link></li>
                         </motion.ul>
                       )}
                     </AnimatePresence>
@@ -243,13 +242,16 @@ const Sidebar = ({ isOpen, toggleSidebar, isPermanent }) => {
                             <li>
                               <Link to="/assignments" className={`flex items-center p-2 text-sm rounded-lg ${isActive('/assignments') ? subMenuActive : subMenuInactive}`} onClick={handleLinkClick}>Assignment</Link>
                             </li>
+                            <li>
+                              <Link to="/notifications" className={`flex items-center p-2 text-sm rounded-lg ${isActive('/notifications') ? subMenuActive : subMenuInactive}`} onClick={handleLinkClick}>Notifications</Link>
+                            </li>
                           </motion.ul>
                         )}
                       </AnimatePresence>
                     </li>
                   )}
 
-                  {/* Add Form (Only for Admin & Manager) */}
+                  {/* Add Form Section (Only for Admin & Manager) */}
                   {canAccessForms && (
                     <li>
                       <button
@@ -281,6 +283,12 @@ const Sidebar = ({ isOpen, toggleSidebar, isPermanent }) => {
                             </li>
                             <li>
                               <Link to="/requestForm" className={`flex items-center p-2 text-sm rounded-lg ${isActive('/requestForm') ? subMenuActive : subMenuInactive}`} onClick={handleLinkClick}>Request Form</Link>
+                            </li>
+                            <li>
+                              <Link to="/notificationForm" className={`flex items-center p-2 text-sm rounded-lg ${isActive('/notificationForm') ? subMenuActive : subMenuInactive}`} onClick={handleLinkClick}>Notification Form</Link>
+                            </li>
+                            <li>
+                              <Link to="/submissionForm" className={`flex items-center p-2 text-sm rounded-lg ${isActive('/submissionForm') ? subMenuActive : subMenuInactive}`} onClick={handleLinkClick}>Submission Form</Link>
                             </li>
                           </motion.ul>
                         )}
@@ -316,7 +324,13 @@ const Sidebar = ({ isOpen, toggleSidebar, isPermanent }) => {
                               <Link to="/recycle-bin/subjects" className={`flex items-center p-2 text-sm rounded-lg ${isActive('/recycle-bin/subjects') ? subMenuActive : subMenuInactive}`} onClick={handleLinkClick}>Subject Bin</Link>
                             </li>
                             <li>
-                              <Link to="/recycle-bin/assignments" className={`flex items-center p-2 text-sm rounded-lg ${isActive('/recycle-bin/assignments') ? subMenuActive : subMenuInactive}`} onClick={handleLinkClick}>Assignment Bin</Link>
+                              <Link to="/recycle-bin/assignments-bin" className={`flex items-center p-2 text-sm rounded-lg ${isActive('/recycle-bin/assignments-bin') ? subMenuActive : subMenuInactive}`} onClick={handleLinkClick}>Assignment Bin</Link>
+                            </li>
+                            <li>
+                              <Link to="/recycle-bin/request-forms" className={`flex items-center p-2 text-sm rounded-lg ${isActive('/recycle-bin/request-forms') ? subMenuActive : subMenuInactive}`} onClick={handleLinkClick}>Request Bin</Link>
+                            </li>
+                            <li>
+                              <Link to="/recycle-bin/notifications" className={`flex items-center p-2 text-sm rounded-lg ${isActive('/recycle-bin/notifications') ? subMenuActive : subMenuInactive}`} onClick={handleLinkClick}>Notification Bin</Link>
                             </li>
                           </motion.ul>
                         )}
